@@ -5,19 +5,19 @@ import com.github.fdesu.circuit.gates.Gates;
 
 public class BinaryAdder {
 
-    private final BinaryGate xor = Gates.xor();
-    private final BinaryGate and = Gates.and();
+    private final HalfAdder halfAdder1 = new HalfAdder();
+    private final HalfAdder halfAdder2 = new HalfAdder();
     private final BinaryGate or = Gates.or();
 
     private boolean bit;
     private boolean carry;
 
     public void go(boolean sig1, boolean sig2, boolean carry) {
-        boolean[] first = halfAdd(sig1, sig2);
-        boolean[] second = halfAdd(first[0], carry);
+        halfAdder1.halfAdd(sig1, sig2);
+        halfAdder2.halfAdd(halfAdder1.bit(), carry);
 
-        this.bit = second[0];
-        this.carry = or.perform(first[1], second[1]);
+        this.bit = halfAdder2.bit();
+        this.carry = or.perform(halfAdder1.carry(), halfAdder2.carry());
     }
 
     public boolean bit() {
@@ -28,11 +28,24 @@ public class BinaryAdder {
         return carry;
     }
 
-    private boolean[] halfAdd(boolean a, boolean b) {
-        return new boolean[] {
-                xor.perform(a, b),
-                and.perform(a, b)
-        };
+    private static class HalfAdder {
+        private final BinaryGate xor = Gates.xor();
+        private final BinaryGate and = Gates.and();
+
+        private boolean bit;
+        private boolean carry;
+
+        private void halfAdd(boolean a, boolean b) {
+            bit = xor.perform(a, b);
+            carry = and.perform(a, b);
+        }
+
+        public boolean bit() {
+            return bit;
+        }
+        public boolean carry() {
+            return carry;
+        }
     }
 
 }
